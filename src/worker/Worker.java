@@ -3,7 +3,6 @@ package worker;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,6 +12,7 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
@@ -38,12 +38,12 @@ public class Worker {
 	}
 
 	public Worker(String SEARCHTYPE) throws IOException {
-		
+
 		this.SEARCHTYPE = SEARCHTYPE;
 		this.request = new RequestTask(this);
 		this.timer = new Timer();
 		connectToServer();
-		
+
 
 		new Thread(new Runnable() {
 
@@ -59,12 +59,10 @@ public class Worker {
 
 						String str = bf.readLine();
 						System.out.println(str);
-						
+
 						if(str.contains("SERVER: Sending image!")) {
 							InputStream input1 = s.getInputStream();
 							image = ImageIO.read(input1);
-							System.out.println("Got the image!");
-							System.out.println(image);
 							search();
 						}
 
@@ -72,14 +70,12 @@ public class Worker {
 							timer.cancel();
 							InputStream input2 = s.getInputStream();
 							logo = ImageIO.read(input2);
-							System.out.println("Got the logo!");
-							System.out.println(logo);
 						}
-						
+
 						if(str.contains("connected")) {
 							timer.schedule(request, new Date(System.currentTimeMillis()), 20000);
 						}
-						
+
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -103,7 +99,7 @@ public class Worker {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static boolean areAllTrue(boolean[] array)
 	{
 		for(boolean b : array) {
@@ -121,6 +117,7 @@ public class Worker {
 		int logoWidth = logo.getWidth();
 		int logoHeight = logo.getHeight();
 		Point p;
+		coordinates.removeAll(coordinates);
 
 		boolean[] match = new boolean[logoWidth*logoHeight];
 		int i = 0;
@@ -147,7 +144,6 @@ public class Worker {
 							}
 						}
 						if(areAllTrue(match)) {
-							System.out.println("Found the image!");
 							coordinates.add(p);
 							coordinates.add(new Point(logoWidth,logoHeight));
 						}
@@ -157,24 +153,32 @@ public class Worker {
 		}
 		sendCoordinates();
 	}
-	
+
 	public void sendCoordinates() {
-		String coordinatesMessage = "Search results:";
-		
-		for(int i=0; i!=coordinates.size()-2; i++) {
-			coordinatesMessage += "("+coordinates.get(i).x+","+coordinates.get(i).y+"),";
+		String coordinatesMessage = "RESULTS:";
+
+		for(int i=0; i!=coordinates.size(); i++) {
+			if(i == coordinates.size()-1) {
+				coordinatesMessage += "("+coordinates.get(i).x+","+coordinates.get(i).y+")";
+			} else {
+				coordinatesMessage += "("+coordinates.get(i).x+","+coordinates.get(i).y+");";
+			}
 		}
-		coordinatesMessage += "("+coordinates.get(coordinates.size()-1).x+","+coordinates.get(coordinates.size()-1).y+")";
-		System.out.println(coordinatesMessage);
-		
-		this.request = new RequestTask(this);
-		this.timer = new Timer();
+		out.println(coordinatesMessage);
+		out.flush();
+
+		setTimedTask();
+	}
+
+	private void setTimedTask() {
 		try {
-			this.wait(2000);
+			TimeUnit.SECONDS.sleep(60);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		this.request = new RequestTask(this);
+		this.timer = new Timer();
 		timer.schedule(request, new Date(System.currentTimeMillis()), 20000);
 	}
 

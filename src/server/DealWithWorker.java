@@ -1,5 +1,8 @@
 package server;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -11,6 +14,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.LinkedList;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
@@ -25,6 +29,8 @@ public class DealWithWorker extends Thread {
 	private Socket socket;
 	private DealWithClient client;
 	private BufferedImage image;
+	private String fileName;
+	private LinkedList<Point> coordinates = new LinkedList<Point>();
 
 	private byte[] imageBytes;
 
@@ -51,9 +57,13 @@ public class DealWithWorker extends Thread {
 				String str;
 				str = in.readLine();
 				System.out.println(str);
-				
+
 				if(str.contains("TASK REQUEST")) {
 					findTask();
+				}
+				if(str.contains("RESULTS")) {
+					String[] results = str.split(":");
+					getPoints(results[1]);
 				}
 
 
@@ -99,24 +109,67 @@ public class DealWithWorker extends Thread {
 			outStream.write(imageBytes);
 			outStream.flush();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	private void findTask() {
+	private void getPoints(String coords) {
+		String[] pairs = coords.split(";");
+		String[] point;
+		LinkedList<Integer> points = new LinkedList<Integer>(); 
+		for(int i=0; i!= pairs.length; i++) {
+			String newS = pairs[i].replace("(", "");
+			newS = newS.replace(")", "");
+			point = newS.split(",");
+			points.add(Integer.parseInt(point[0]));
+			points.add(Integer.parseInt(point[1]));
+		}	
+		for(int j=0; j!= points.size(); j+=2) {
+			Point p = new Point(points.get(j),points.get(j+1));
+			coordinates.add(p);
+		}
+		for(int k=0; k!= coordinates.size(); k+=2) {
+			System.out.println(coordinates.get(k).toString());
+			drawRectangle(coordinates.get(k),coordinates.get(k+1));
+		}
 		
+		coordinates.removeAll(coordinates);
+		File newImage = new File(fileName);
+		try {
+			ImageIO.write(image, "png", newImage);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		client.saveResult(newImage);
+	}
+
+	private void drawRectangle(Point top, Point bottom) {
+		Graphics2D g2d = image.createGraphics();
+		g2d.setColor(Color.PINK);
+		g2d.drawRect(top.x, top.y, bottom.x, bottom.y);
+		g2d.dispose();
+	}
+
+	private void findTask() {
+
 		Boolean task=false;
 
 		for(int i=0; i!=server.getClients().size(); i++) {
 			if(!server.getClients().get(i).getTasks().isEmpty()) {
-				String taskString[] = server.getClients().get(i).getTasks().getFirst().split("|");
-				String fileName = taskString[0];
+				String taskString[] = server.getClients().get(i).getTasks().getFirst().split(",");
+				server.getClients().get(i).getTasks().removeFirst();
+				for(int j=0; j!=taskString.length; j++) {
+					System.out.println(taskString[j]);
+				}
+				String name = taskString[0];
+				this.fileName = taskString[0];
 				File[] images = server.getClients().get(i).getFiles();
 				this.client = server.getClients().get(i);
 				task = true;
 				for(int k=0; k!=images.length; k++) {
-					if(images[k].getName().contains(fileName)) {
+					if(images[k].getName().contains(name)) {
 						try {
 							this.image = ImageIO.read(images[k]);
 						} catch (IOException e) {
@@ -127,12 +180,11 @@ public class DealWithWorker extends Thread {
 				}
 			}
 			if(task) {
-				System.out.println("There's a task");
 				sendTask(image, client.getLogo(), client);
 				break;
 			}
+			System.out.println("No tasks.");
 		}
-		System.out.println("No tasks yet!");
 	}
 
 

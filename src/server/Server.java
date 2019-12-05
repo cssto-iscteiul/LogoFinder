@@ -44,16 +44,16 @@ public class Server {
 					String[] string= str.split(":");
 					String SEARCHTYPE = string[2];
 					addSearchType(SEARCHTYPE);
-					
+
 					out.println("SERVER: you're connected!");
 					out.flush();
-					
+
 					DealWithWorker dww = new DealWithWorker(s, this);
 					dww.start();
 					workers.add(dww);
 				}
 				if(str.contains("TYPE: CLIENT")) {
-					
+
 					if(!searchTypes.isEmpty()) {
 						out.println(searchTypesToString());
 						out.flush();						
@@ -61,11 +61,11 @@ public class Server {
 						out.println("SERVER: you're connected!");
 						out.flush();
 					}
-					
+
 					DealWithClient dwc = new DealWithClient(s, this);
 					dwc.start();
 					clients.add(dwc);
-					
+
 				}
 
 			} catch (IOException e) {
@@ -77,7 +77,7 @@ public class Server {
 	public synchronized LinkedList<DealWithWorker> getWorkers(){
 		return workers;
 	}
-	
+
 	public synchronized LinkedList<DealWithClient> getClients(){
 		return clients;
 	}

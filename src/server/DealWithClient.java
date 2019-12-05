@@ -19,18 +19,18 @@ public class DealWithClient extends Thread {
 	private PrintWriter out;
 	private Server server;
 	private Socket socket;
-	
+
 	private LinkedList<String> tasks = new LinkedList<String>();
 	private File[] imagesToSearch;
 	private BufferedImage logo;
-	private LinkedList<BufferedImage> results = new LinkedList<BufferedImage>();
+	private LinkedList<File> results = new LinkedList<File>();
 	private String SEARCH;
 
 	public DealWithClient(Socket socket, Server server) {
-		
+
 		this.server = server;
 		this.socket = socket;
-		
+
 		try {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
@@ -70,34 +70,34 @@ public class DealWithClient extends Thread {
 			}
 		}
 	}
-	
-	public synchronized void saveResult(BufferedImage image) {
+
+	public synchronized void saveResult(File image) {
 		results.add(image);
 	}
-	
+
 	public void updateSearch(String search) {
 		out.println(search);
 		out.flush();
 	}
-	
+
 	private void addTasks(String search) {
 		for(int i=0; i!= imagesToSearch.length; i++) {
-			String task = imagesToSearch[i].getName()+"|"+search;
+			String task = imagesToSearch[i].getName()+","+search;
 			tasks.add(task);
 		}
 	}
-	
+
 	public synchronized LinkedList<String> getTasks() {
 		return tasks;
 	}
-	
+
 	public synchronized File[] getFiles() {
 		return imagesToSearch;
 	}
-	
+
 	public synchronized BufferedImage getLogo() {
 		return logo;
 	}
-	
+
 
 }
