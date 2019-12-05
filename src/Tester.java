@@ -1,24 +1,17 @@
+import java.util.Date;
+import java.util.Timer;
+
+import worker.RequestTask;
 
 public class Tester {
 
-	private static String[] searchTypes = {"Simple Search", "90º Search", "180º Search"};
+	//private static RequestTask request = new RequestTask();
 	
 	public static void main(String[] args) {
 		
-		System.out.println(searchTypes());
+		//Timer timer = new Timer();
+		//timer.schedule(request, new Date(System.currentTimeMillis()), 20000);
 
-	}
-	
-	public static String searchTypes() {
-		String str="";
-		
-		for(int i=0; i!=searchTypes.length; i++) {
-			str= str + searchTypes[i];
-			if(i!=searchTypes.length-1) {
-				str = str + ",";
-			} 			
-		}
-		return str;
 	}
 
 }

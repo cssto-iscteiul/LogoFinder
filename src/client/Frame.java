@@ -1,8 +1,7 @@
+package client;
 import java.awt.BorderLayout;
 import java.awt.Button;
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
@@ -54,6 +53,7 @@ public class Frame {
 	private BufferedImage imageToCompare;
 	private Client client;
 	private String finalPath;
+	private int logoSize;
 
 	public Frame(Client client) {
 		
@@ -142,10 +142,12 @@ public class Frame {
 				if (rVal == JFileChooser.APPROVE_OPTION) {
 					image.setText(fileChooser.getSelectedFile().getName());
 					try {
-						logoToSearch = ImageIO.read(fileChooser.getSelectedFile());					 
+						logoToSearch = ImageIO.read(fileChooser.getSelectedFile());
+						fileChooser.getSelectedFile().length();
+						
+						//TODO send the path to the client!
 
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 				}
@@ -241,6 +243,10 @@ public class Frame {
 		}
 		frame.revalidate();
 		frame.repaint();
+	}
+	
+	public int getLogoSize() {
+		return logoSize;
 	}
 
 }
