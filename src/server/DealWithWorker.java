@@ -31,7 +31,6 @@ public class DealWithWorker extends Thread {
 	private BufferedImage image;
 	private String fileName;
 	private LinkedList<Point> coordinates = new LinkedList<Point>();
-
 	private byte[] imageBytes;
 
 	public DealWithWorker(Socket socket, Server server) {
@@ -63,6 +62,7 @@ public class DealWithWorker extends Thread {
 				}
 				if(str.contains("RESULTS")) {
 					String[] results = str.split(":");
+					System.out.println(results[1]);
 					getPoints(results[1]);
 				}
 
@@ -129,25 +129,24 @@ public class DealWithWorker extends Thread {
 			coordinates.add(p);
 		}
 		for(int k=0; k!= coordinates.size(); k+=2) {
-			System.out.println(coordinates.get(k).toString());
+			//System.out.println(coordinates.get(k).toString());
 			drawRectangle(coordinates.get(k),coordinates.get(k+1));
 		}
-		
+
 		coordinates.removeAll(coordinates);
 		File newImage = new File(fileName);
 		try {
 			ImageIO.write(image, "png", newImage);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
+			System.out.println("ERROR: Couldn't draw image!");
 			e1.printStackTrace();
 		}
-		
 		client.saveResult(newImage);
 	}
 
 	private void drawRectangle(Point top, Point bottom) {
 		Graphics2D g2d = image.createGraphics();
-		g2d.setColor(Color.PINK);
+		g2d.setColor(Color.CYAN);
 		g2d.drawRect(top.x, top.y, bottom.x, bottom.y);
 		g2d.dispose();
 	}
@@ -160,9 +159,11 @@ public class DealWithWorker extends Thread {
 			if(!server.getClients().get(i).getTasks().isEmpty()) {
 				String taskString[] = server.getClients().get(i).getTasks().getFirst().split(",");
 				server.getClients().get(i).getTasks().removeFirst();
+				/*
 				for(int j=0; j!=taskString.length; j++) {
 					System.out.println(taskString[j]);
 				}
+				 */
 				String name = taskString[0];
 				this.fileName = taskString[0];
 				File[] images = server.getClients().get(i).getFiles();
@@ -183,7 +184,7 @@ public class DealWithWorker extends Thread {
 				sendTask(image, client.getLogo(), client);
 				break;
 			}
-			System.out.println("No tasks.");
+			//System.out.println("No tasks.");
 		}
 	}
 

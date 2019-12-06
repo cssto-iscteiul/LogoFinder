@@ -15,6 +15,7 @@ public class Client {
 	private LinkedList<String> searchTypes = new LinkedList<String>();
 	private PrintWriter out;
 	private byte[] logoBytes;
+	private LinkedList<File> files = new LinkedList<File>();
 
 	public static void main(String[] args) throws IOException {
 
@@ -48,6 +49,21 @@ public class Client {
 							updateList(string);
 							window.updateSearchList(searchTypes);
 						}
+
+						if(str.contains("File name")) {
+							String[] string = str.split(":");
+							String fileName = string[1];
+							InputStream input1 = s.getInputStream();
+							BufferedImage img = ImageIO.read(input1);
+							ImageIO.write(img, "png", new File(window.getPath()+"\\result-"+fileName));
+							File image = new File(fileName);
+							files.add(image);
+						}
+
+						if(str.contains("DONE.")) {
+							//System.out.println(window.getPath());
+							window.updateList(window.getPath()+"\\results");
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -68,6 +84,7 @@ public class Client {
 			out.flush();
 
 		} catch (IOException e) {
+			System.out.println("ERROR: Failed connecting to server!");
 			e.printStackTrace();
 		}
 	}

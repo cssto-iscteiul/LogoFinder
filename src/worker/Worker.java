@@ -85,7 +85,6 @@ public class Worker {
 	}
 
 	public void connectToServer() {
-
 		try {
 
 			HOST = InetAddress.getLocalHost();
@@ -174,7 +173,7 @@ public class Worker {
 		try {
 			TimeUnit.SECONDS.sleep(60);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+			System.out.println("ERROR: Pause failed!");
 			e.printStackTrace();
 		}
 		this.request = new RequestTask(this);

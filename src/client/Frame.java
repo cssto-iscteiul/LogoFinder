@@ -56,7 +56,7 @@ public class Frame {
 	private int logoSize;
 
 	public Frame(Client client) {
-		
+
 		this.client = client;
 		frame = new JFrame("Logo Finder");
 		bottomP = new JPanel();
@@ -88,21 +88,21 @@ public class Frame {
 		frame.add(leftList, BorderLayout.WEST);
 		frame.add(bottom, BorderLayout.SOUTH);
 		frame.add(new JScrollPane(imageToSearch), BorderLayout.CENTER);
-		
+
 		leftList.setFixedCellWidth(100);
 		leftList.setFixedCellHeight(20);
-		
+
 		frame.addWindowListener(new java.awt.event.WindowAdapter() {
-		    @Override
-		    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-		        if (JOptionPane.showConfirmDialog(frame, 
-		            "Are you sure you want to close this window?", "Close Window?", 
-		            JOptionPane.YES_NO_OPTION,
-		            JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
-		        	client.endConnection();
-		            System.exit(0);
-		        }
-		    }
+			@Override
+			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+				if (JOptionPane.showConfirmDialog(frame, 
+						"Are you sure you want to close this window?", "Close Window?", 
+						JOptionPane.YES_NO_OPTION,
+						JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
+					client.endConnection();
+					System.exit(0);
+				}
+			}
 		});
 
 
@@ -118,14 +118,16 @@ public class Frame {
 				if (rVal == JFileChooser.APPROVE_OPTION) {
 					folder.setText(fileChooser.getSelectedFile().toString());
 					String path = fileChooser.getSelectedFile().toString();
+					setPath(path);
+					/*
 					updateList(path);
 					frame.add(new JScrollPane(rightList), BorderLayout.EAST);
 					frame.revalidate();
 					frame.repaint();
-
 					if(!rightList.isSelectionEmpty()) {
 						setImageToSearch();
 					}
+					 */
 				}
 			}
 		});
@@ -143,10 +145,7 @@ public class Frame {
 					image.setText(fileChooser.getSelectedFile().getName());
 					try {
 						logoToSearch = ImageIO.read(fileChooser.getSelectedFile());
-						fileChooser.getSelectedFile().length();
-						
-						//TODO send the path to the client!
-
+						//fileChooser.getSelectedFile().length();
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
@@ -166,7 +165,26 @@ public class Frame {
 
 	}
 
-	private void updateList(String path) {
+	public void setPath(String path) {
+
+		class SimpleFileCellRenderer extends DefaultListCellRenderer implements ListCellRenderer<Object>
+		{
+			// This shows relative paths instead of absolute.  
+			@Override
+			public Component getListCellRendererComponent(
+					JList<? extends Object> list, Object value, int index,
+					boolean isSelected, boolean cellHasFocus) {
+
+				Path relative = ((File) value).toPath().getFileName();
+
+				return super.getListCellRendererComponent(list, relative, index, isSelected, cellHasFocus);
+			}
+		}
+
+		finalPath = path.replaceAll("\\\\", "/");
+	}
+
+	public void updateList(String path) {
 
 		class SimpleFileCellRenderer extends DefaultListCellRenderer implements ListCellRenderer<Object>
 		{
@@ -189,6 +207,10 @@ public class Frame {
 		rightList.setCellRenderer(new SimpleFileCellRenderer());
 		rightList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+		frame.add(new JScrollPane(rightList), BorderLayout.EAST);
+		frame.revalidate();
+		frame.repaint();
+
 		MouseListener ml = (MouseListener) new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent evt) {
@@ -207,14 +229,14 @@ public class Frame {
 		frame.setResizable(false);
 		frame.setVisible(true);
 	}
-	
+
 	/*
 
 	private void reloadImage() {
 		imageToSearch.setIcon(new ImageIcon(imageToCompare));
 	}
-	
-	*/
+
+	 */
 
 	private void setImageToSearch(){
 		if(!rightList.isSelectionEmpty()){
@@ -235,7 +257,7 @@ public class Frame {
 					});
 		}
 	}
-	
+
 
 	public void updateSearchList(LinkedList<String> searchTypes) {
 		for(int i = 0; i < searchTypes.size(); i++) {
@@ -244,9 +266,9 @@ public class Frame {
 		frame.revalidate();
 		frame.repaint();
 	}
-	
-	public int getLogoSize() {
-		return logoSize;
+
+	public String getPath() {
+		return finalPath;
 	}
 
 }
