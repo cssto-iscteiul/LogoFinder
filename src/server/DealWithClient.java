@@ -56,7 +56,7 @@ public class DealWithClient extends Thread {
 				String str;
 				str = in.readLine();
 				System.out.println(str);
-				if (str.contains("C:")) {
+				if (str.contains("Users")) {
 					String[] string = str.split(",");
 					this.SEARCH = string[0];
 					String PATH = string[1];
@@ -120,8 +120,7 @@ public class DealWithClient extends Thread {
 			baos.flush();
 			imageBytes = baos.toByteArray();
 			baos.close();
-			OutputStream outStream = socket.getOutputStream();
-			// TODO outStream.flush();
+			OutputStream outStream = socket.getOutputStream();;
 			outStream.write(imageBytes);
 			outStream.flush();
 		} catch (IOException e) {

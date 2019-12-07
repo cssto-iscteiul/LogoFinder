@@ -224,8 +224,8 @@ public class Worker {
 					match = new boolean[logoWidth * logoHeight];
 					i = 0;
 					if (x + logoWidth < width && y + logoHeight < height) {
-						for (int j = logoHeight; j > 0; j--) {
-							for (int k = logoWidth; k > 0; k--) {
+						for (int j = logoHeight - 1; j > 0; j--) {
+							for (int k = logoWidth - 1; k > 0; k--) {
 								if (image.getRGB(x - (-k), y - (-j)) == logo.getRGB(k, j)) {
 									match[i] = true;
 								} else {
