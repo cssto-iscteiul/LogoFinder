@@ -10,7 +10,7 @@ import javax.imageio.ImageIO;
 public class Client {
 
 	private InetAddress HOST;
-	private final int PORT = 8080;
+	private int PORT;
 	private Socket socket;
 	private Frame window;
 	private LinkedList<String> searchTypes = new LinkedList<String>();
@@ -23,6 +23,7 @@ public class Client {
 	}
 
 	public Client(int PORT) throws IOException {
+		this.PORT = PORT;
 		connectToServer();
 		window = new Frame(this);
 		window.open();

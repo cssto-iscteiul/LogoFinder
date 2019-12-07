@@ -19,7 +19,7 @@ import javax.imageio.ImageIO;
 public class Worker {
 
 	private InetAddress HOST;
-	private final int PORT = 8080;
+	private int PORT;
 	private Socket s;
 	private PrintWriter out;
 	private Timer timer;
@@ -33,11 +33,12 @@ public class Worker {
 		Worker worker = new Worker(Integer.parseInt(args[0]), args[1]);
 	}
 
-	public Worker(int HOST, String SEARCHTYPE) throws IOException {
+	public Worker(int PORT, String SEARCHTYPE) throws IOException {
 
 		this.request = new RequestTask(this);
 		this.SEARCHTYPE = SEARCHTYPE;
 		this.timer = new Timer();
+		this.PORT = PORT;
 		connectToServer();
 
 		new Thread(new Runnable() {
@@ -65,7 +66,7 @@ public class Worker {
 								ninetyDegreeSearch();
 							}
 							if (SEARCHTYPE.contains("180")) {
-								simpleSearch();
+								oneEightyDegreeSearch();
 							}
 						}
 						if (str.contains("SERVER: Sending logo!")) {
@@ -119,7 +120,7 @@ public class Worker {
 
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
-				if (image.getRGB(x, y) == logo.getRGB(0, logoHeight - 1)) {
+				if (image.getRGB(x, y) == logo.getRGB(0, 0)) {
 					p = new Point(x, y);
 					match = new boolean[logoWidth * logoHeight];
 					i = 0;
@@ -149,6 +150,8 @@ public class Worker {
 		}
 		if (logosFound != 0) {
 			sendCoordinates();
+		} else {
+			setTimedTask();
 		}
 	}
 
@@ -167,6 +170,7 @@ public class Worker {
 			for (int x = 0; x < width; x++) {
 				if (image.getRGB(x, y) == logo.getRGB(0, logoHeight - 1)) {
 					p = new Point(x, y);
+					match = new boolean[logoWidth * logoHeight];
 					i = 0;
 					if (x + logoHeight < width && y + logoWidth < height) {
 						int yValue = y;
@@ -184,6 +188,55 @@ public class Worker {
 								i++;
 							}
 							yValue++;
+						}
+						if (areAllTrue(match)) {
+							coordinates.add(p);
+							coordinates.add(new Point(logoHeight, logoWidth));
+							logosFound++;
+						}
+					}
+				}
+			}
+		}
+		if (logosFound != 0) {
+			sendCoordinates();
+		} else {
+			System.out.println("Found peanuts.");
+			setTimedTask();
+		}
+	}
+
+	private void oneEightyDegreeSearch() {
+		Point p;
+		int width = image.getWidth();
+		int height = image.getHeight();
+		int logoWidth = logo.getWidth();
+		int logoHeight = logo.getHeight();
+		coordinates.removeAll(coordinates);
+		boolean[] match = new boolean[logoWidth * logoHeight];
+		int i = 0;
+		int logosFound = 0;
+
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				if (image.getRGB(x, y) == logo.getRGB(logoWidth - 1, logoHeight - 1)) {
+					p = new Point(x, y);
+					match = new boolean[logoWidth * logoHeight];
+					i = 0;
+					if (x + logoWidth < width && y + logoHeight < height) {
+						for (int j = logoHeight; j > 0; j--) {
+							for (int k = logoWidth; k > 0; k--) {
+								if (image.getRGB(x - (-k), y - (-j)) == logo.getRGB(k, j)) {
+									match[i] = true;
+								} else {
+									match[i] = false;
+									break;
+								}
+								if (!match[i]) {
+									break;
+								}
+								i++;
+							}
 						}
 						if (areAllTrue(match)) {
 							coordinates.add(p);

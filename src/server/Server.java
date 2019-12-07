@@ -8,7 +8,7 @@ public class Server {
 
 	private ServerSocket serverSocket;
 	private Socket socket;
-	private final int PORT = 8080;
+	private int PORT;
 	private BufferedReader in;
 	private PrintWriter out;
 	private LinkedList<String> searchTypes = new LinkedList<String>();
@@ -21,6 +21,7 @@ public class Server {
 	}
 
 	public Server(int PORT) {
+		this.PORT = PORT;
 		try {
 			serverSocket = new ServerSocket(PORT);
 		} catch (IOException e) {
