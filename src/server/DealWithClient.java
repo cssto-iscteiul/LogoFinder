@@ -26,27 +26,24 @@ public class DealWithClient extends Thread {
 	private Socket socket;
 
 	private LinkedList<String> tasks = new LinkedList<String>();
-	private File[] imagesToSearch;
-	private BufferedImage logo;
 	private LinkedList<File> results = new LinkedList<File>();
+	private File[] imagesToSearch;
 	private byte[] imageBytes;
-	private BufferedImage imageToSend;
-	private String SEARCH;
 	private int taskCounter;
+	private BufferedImage logo;
+	private BufferedImage imageToSend;
 	private CheckForResults checkForResults;
+	private String SEARCH;
 	private Timer timer;
 
 	public DealWithClient(Socket socket, Server server) {
-
 		this.server = server;
 		this.socket = socket;
 		this.checkForResults = new CheckForResults(this);
 		this.timer = new Timer();
-
 		try {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -54,14 +51,11 @@ public class DealWithClient extends Thread {
 
 	@Override
 	public void run() {
-
 		while(true) {
 			try {
-
 				String str;
 				str = in.readLine();
 				System.out.println(str);
-
 				if(str.contains("C:")) {
 					String[] string= str.split(",");
 					this.SEARCH = string[0];
@@ -71,13 +65,11 @@ public class DealWithClient extends Thread {
 				if(str.contains("CLIENT REQUEST")) {
 					this.logo = ImageIO.read(socket.getInputStream());
 					addTasks(SEARCH);
-					timer.schedule(checkForResults, new Date(System.currentTimeMillis()), 40000);
+					timer.schedule(checkForResults, new Date(System.currentTimeMillis()), 20000);
 				}
-
 				if(str.contains("Disconnecting")) {
 					server.getClients().remove(this);
 				}
-
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -97,6 +89,8 @@ public class DealWithClient extends Thread {
 	public void sendResults() {
 		if(taskCounter==0 && !results.isEmpty()) {
 			for(int i=0; i!=results.size(); i++) {
+				// TODO
+				out.flush();
 				out.println("File name:"+results.get(i).getName());
 				out.flush();
 				try {
@@ -107,7 +101,7 @@ public class DealWithClient extends Thread {
 				}
 				sendImage(imageToSend);
 				try {
-					TimeUnit.SECONDS.sleep(30);
+					TimeUnit.SECONDS.sleep(5);
 				} catch (InterruptedException e) {
 					System.out.println("ERROR: Didn't wait for image transfer!");
 					e.printStackTrace();
@@ -120,7 +114,6 @@ public class DealWithClient extends Thread {
 	}
 
 	private synchronized void sendImage(BufferedImage image) {
-
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write(image, "png", baos);
@@ -128,10 +121,11 @@ public class DealWithClient extends Thread {
 			imageBytes = baos.toByteArray();
 			baos.close();
 			OutputStream outStream = socket.getOutputStream();
-			outStream.flush();
+			//TODO outStream.flush();
 			outStream.write(imageBytes);
 			outStream.flush();
 		} catch (IOException e) {
+			System.out.println("ERROR: failed sending image!");
 			e.printStackTrace();
 		}
 	}

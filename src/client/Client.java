@@ -10,27 +10,23 @@ public class Client {
 
 	private InetAddress HOST;
 	private final int PORT = 8080;
-	private Socket s;
+	private Socket socket;
 	private Frame window;
 	private LinkedList<String> searchTypes = new LinkedList<String>();
 	private PrintWriter out;
 	private byte[] logoBytes;
 	private LinkedList<File> files = new LinkedList<File>();
-
+	
 	public static void main(String[] args) throws IOException {
-
-		Client client = new Client();
-
+		Client client = new Client(Integer.parseInt(args[0]));
 	}
 
-	public Client() throws IOException {
+	public Client(int PORT) throws IOException {
 		connectToServer();
-
 		window = new Frame(this);
 		window.open();			
 
 		new Thread(new Runnable() {
-
 			@Override
 			public void run() {
 				InputStreamReader in;
@@ -38,9 +34,8 @@ public class Client {
 
 				while (true) {
 					try {
-						in = new InputStreamReader(s.getInputStream());
+						in = new InputStreamReader(socket.getInputStream());
 						bf = new BufferedReader(in);
-
 						String str = bf.readLine();
 						System.out.println(str);
 
@@ -49,20 +44,17 @@ public class Client {
 							updateList(string);
 							window.updateSearchList(searchTypes);
 						}
-
 						if(str.contains("File name")) {
 							String[] string = str.split(":");
 							String fileName = string[1];
-							InputStream input1 = s.getInputStream();
+							InputStream input1 = socket.getInputStream();
 							BufferedImage img = ImageIO.read(input1);
-							ImageIO.write(img, "png", new File(window.getPath()+"\\result-"+fileName));
 							File image = new File(fileName);
+							ImageIO.write(img, "png", image);
 							files.add(image);
 						}
-
 						if(str.contains("DONE.")) {
-							//System.out.println(window.getPath());
-							window.updateList(window.getPath()+"\\results");
+							window.updateList(files);
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -73,13 +65,10 @@ public class Client {
 	}
 
 	public void connectToServer() {
-
 		try {
-
 			HOST = InetAddress.getLocalHost();
-			s = new Socket(HOST, PORT);
-
-			out = new PrintWriter(s.getOutputStream());
+			socket = new Socket(HOST, PORT);
+			out = new PrintWriter(socket.getOutputStream());
 			out.println("TYPE: CLIENT");
 			out.flush();
 
@@ -90,7 +79,6 @@ public class Client {
 	}
 
 	public void updateList(String[] data) {
-
 		for(int i = 0; i < data.length; i++) {
 			searchTypes.add(data[i]);
 		}
@@ -101,16 +89,14 @@ public class Client {
 		out.flush();
 		out.println("CLIENT REQUEST");
 		out.flush();
-
 		convertImageToArray(logo);
 		try {
-			OutputStream outStream = s.getOutputStream();
+			OutputStream outStream = socket.getOutputStream();
 			outStream.write(logoBytes);
 			outStream.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	public void convertImageToArray(BufferedImage image) {
@@ -129,7 +115,7 @@ public class Client {
 		try {
 			out.write("CLIENT: Disconnecting!");
 			out.flush();
-			s.close();
+			socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -6,71 +6,26 @@ import java.util.LinkedList;
 
 public class Server {
 
-	private ServerSocket ss;
-	private Socket s;
+	private ServerSocket serverSocket;
+	private Socket socket;
 	private final int PORT = 8080;
+	private BufferedReader in;
+	private PrintWriter out;
 	private LinkedList<String> searchTypes = new LinkedList<String>();
 	private LinkedList<DealWithWorker> workers = new LinkedList<DealWithWorker>();
 	private LinkedList<DealWithClient> clients = new LinkedList<DealWithClient>();
-	private BufferedReader in;
-	private PrintWriter out;
 
 	public static void main(String[] args) throws IOException {
-		Server server = new Server();
+		Server server = new Server(Integer.parseInt(args[0]));
 		server.serve();
 	}
 
-	public Server() {
+	public Server(int PORT) {
 		try {
-			ss = new ServerSocket(PORT);
+			serverSocket = new ServerSocket(PORT);
 		} catch (IOException e) {
+			System.out.println("ERROR: failed creating server socket!");
 			e.printStackTrace();
-		}
-	}
-
-	public void serve() {
-		System.out.println("Waiting for connections.....");
-		while (true) {
-			try {
-				s = ss.accept();
-				in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-				out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(s.getOutputStream())), true);
-
-				String str;
-				str = in.readLine();
-				System.out.println(str);
-
-				if(str.contains("TYPE: WORKER")) {
-					String[] string= str.split(":");
-					String SEARCHTYPE = string[2];
-					addSearchType(SEARCHTYPE);
-
-					out.println("SERVER: you're connected!");
-					out.flush();
-
-					DealWithWorker dww = new DealWithWorker(s, this);
-					dww.start();
-					workers.add(dww);
-				}
-				if(str.contains("TYPE: CLIENT")) {
-
-					if(!searchTypes.isEmpty()) {
-						out.println(searchTypesToString());
-						out.flush();						
-					} else {
-						out.println("SERVER: you're connected!");
-						out.flush();
-					}
-
-					DealWithClient dwc = new DealWithClient(s, this);
-					dwc.start();
-					clients.add(dwc);
-
-				}
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
@@ -82,11 +37,42 @@ public class Server {
 		return clients;
 	}
 
-	private synchronized void addSearchType(String search) {
-		if(!searchTypes.contains(search)) {
-			searchTypes.add(search);
-			for(int i=0; i!= clients.size(); i++) {
-				clients.get(i).updateSearch(searchTypesToString());
+	public void serve() {
+		System.out.println("Waiting for connections.....");
+		while (true) {
+			try {
+				socket = serverSocket.accept();
+				in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+				String str;
+				str = in.readLine();
+				//TODO
+				System.out.println(str);
+
+				if(str.contains("TYPE: WORKER")) {
+					String[] string= str.split(":");
+					String SEARCHTYPE = string[2];
+					addSearchType(SEARCHTYPE);
+					out.println("SERVER: you're connected!");
+					out.flush();
+					DealWithWorker dww = new DealWithWorker(socket, this);
+					dww.start();
+					workers.add(dww);
+				}
+				if(str.contains("TYPE: CLIENT")) {
+					if(!searchTypes.isEmpty()) {
+						out.println(searchTypesToString());
+						out.flush();						
+					} else {
+						out.println("SERVER: you're connected!");
+						out.flush();
+					}
+					DealWithClient dwc = new DealWithClient(socket, this);
+					dwc.start();
+					clients.add(dwc);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -101,6 +87,15 @@ public class Server {
 			} 			
 		}
 		return str;
+	}
+
+	private synchronized void addSearchType(String search) {
+		if(!searchTypes.contains(search)) {
+			searchTypes.add(search);
+			for(int i=0; i!= clients.size(); i++) {
+				clients.get(i).updateSearch(searchTypesToString());
+			}
+		}
 	}
 
 }

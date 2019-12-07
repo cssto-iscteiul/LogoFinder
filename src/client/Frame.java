@@ -17,6 +17,7 @@ import java.util.LinkedList;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -44,16 +45,16 @@ public class Frame {
 	private Button search;
 	private JPanel bottomP;
 	private JPanel bottom;
-	private String[] data = new String[3];
-	private File[] images;
+	private JLabel imageToSearch;
 	private JList<File> rightList;
 	private JList<String> leftList;
-	private JLabel imageToSearch;
 	private BufferedImage logoToSearch;
 	private BufferedImage imageToCompare;
+	private String[] data = new String[3];
+	DefaultListModel<File> listModel = new DefaultListModel<>();
+	//private File[] images = new File[50];
 	private Client client;
 	private String finalPath;
-	private int logoSize;
 
 	public Frame(Client client) {
 
@@ -67,13 +68,14 @@ public class Frame {
 		bottomP.setLayout(new GridLayout(2,2,3,3));
 
 		leftList = new JList<String>(data);
-
+		rightList = new JList<File>(listModel);
 		folder = new TextField("No Folder has been selected.");
 		image = new TextField("No Image has been selected.");
 		search = new Button("Search");
 		folderB = new Button("Select Folder");
 		imageB = new Button("Select Image");
 		imageToSearch = new JLabel("", SwingConstants.CENTER);
+
 
 		imageToSearch.setIcon(null);
 		imageToSearch.setText("No Image Selected.");
@@ -86,11 +88,14 @@ public class Frame {
 		bottom.add(search);
 
 		frame.add(leftList, BorderLayout.WEST);
+		frame.add(rightList, BorderLayout.EAST);
 		frame.add(bottom, BorderLayout.SOUTH);
 		frame.add(new JScrollPane(imageToSearch), BorderLayout.CENTER);
 
 		leftList.setFixedCellWidth(100);
 		leftList.setFixedCellHeight(20);
+		rightList.setFixedCellWidth(100);
+		rightList.setFixedCellHeight(20);
 
 		frame.addWindowListener(new java.awt.event.WindowAdapter() {
 			@Override
@@ -120,10 +125,6 @@ public class Frame {
 					String path = fileChooser.getSelectedFile().toString();
 					setPath(path);
 					/*
-					updateList(path);
-					frame.add(new JScrollPane(rightList), BorderLayout.EAST);
-					frame.revalidate();
-					frame.repaint();
 					if(!rightList.isSelectionEmpty()) {
 						setImageToSearch();
 					}
@@ -145,7 +146,6 @@ public class Frame {
 					image.setText(fileChooser.getSelectedFile().getName());
 					try {
 						logoToSearch = ImageIO.read(fileChooser.getSelectedFile());
-						//fileChooser.getSelectedFile().length();
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
@@ -157,57 +157,45 @@ public class Frame {
 			public void actionPerformed(ActionEvent e) {
 				if(leftList.isSelectionEmpty()) {
 					JOptionPane.showMessageDialog(frame, "Select search type!");
+				} else if (folder.getText().equalsIgnoreCase("No Folder has been selected.")) {
+					JOptionPane.showMessageDialog(frame, "Select image folder!");
+				} else if (image.getText().equalsIgnoreCase("No Image has been selected.")) {
+					JOptionPane.showMessageDialog(frame, "Select logo to find!");
 				} else {
 					client.requestSearch(logoToSearch, finalPath, leftList.getSelectedValue());
 				}
 			}
 		});
-
 	}
 
 	public void setPath(String path) {
 
-		class SimpleFileCellRenderer extends DefaultListCellRenderer implements ListCellRenderer<Object>
-		{
-			// This shows relative paths instead of absolute.  
-			@Override
-			public Component getListCellRendererComponent(
-					JList<? extends Object> list, Object value, int index,
-					boolean isSelected, boolean cellHasFocus) {
-
-				Path relative = ((File) value).toPath().getFileName();
-
-				return super.getListCellRendererComponent(list, relative, index, isSelected, cellHasFocus);
-			}
-		}
-
 		finalPath = path.replaceAll("\\\\", "/");
 	}
 
-	public void updateList(String path) {
+	public void updateList(LinkedList<File> files) {	
 
-		class SimpleFileCellRenderer extends DefaultListCellRenderer implements ListCellRenderer<Object>
-		{
-			// This shows relative paths instead of absolute.  
+		class FileRenderer extends JLabel implements ListCellRenderer<File> {
+
 			@Override
-			public Component getListCellRendererComponent(
-					JList<? extends Object> list, Object value, int index,
+			public Component getListCellRendererComponent(JList<? extends File> list, File file, int index,
 					boolean isSelected, boolean cellHasFocus) {
 
-				Path relative = ((File) value).toPath().getFileName();
+				setIcon(null);
+				setText(file.getName());
 
-				return super.getListCellRendererComponent(list, relative, index, isSelected, cellHasFocus);
+				return this;
 			}
+
 		}
 
-		finalPath = path.replaceAll("\\\\", "/");
-		images = new File(finalPath).listFiles();
+		for(int i=0; i!=files.size(); i++) {
+			listModel.add(i,files.get(i));
+		}
 
-		rightList = new JList<File>(images);
-		rightList.setCellRenderer(new SimpleFileCellRenderer());
+		rightList.setCellRenderer(new FileRenderer());
 		rightList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-		frame.add(new JScrollPane(rightList), BorderLayout.EAST);
 		frame.revalidate();
 		frame.repaint();
 
@@ -230,14 +218,6 @@ public class Frame {
 		frame.setVisible(true);
 	}
 
-	/*
-
-	private void reloadImage() {
-		imageToSearch.setIcon(new ImageIcon(imageToCompare));
-	}
-
-	 */
-
 	private void setImageToSearch(){
 		if(!rightList.isSelectionEmpty()){
 			rightList.addListSelectionListener(
@@ -245,19 +225,17 @@ public class Frame {
 						public void valueChanged(ListSelectionEvent event) {
 
 							try {
-								imageToCompare = ImageIO.read(images[rightList.getSelectedIndex()]);
+								imageToCompare = ImageIO.read(listModel.get(rightList.getSelectedIndex()));
 								imageToSearch.setText(null);
 								imageToSearch.setIcon(new ImageIcon(imageToCompare));
-
 							} catch (IOException e1) {
-								// TODO Auto-generated catch block
+								System.out.println("ERROR: couldn't display image!");
 								e1.printStackTrace();
 							}
 						}
 					});
 		}
 	}
-
 
 	public void updateSearchList(LinkedList<String> searchTypes) {
 		for(int i = 0; i < searchTypes.size(); i++) {

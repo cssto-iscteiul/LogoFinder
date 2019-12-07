@@ -1,8 +1,6 @@
 package server;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Point;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -15,9 +13,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.LinkedList;
-
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageOutputStream;
 
 
 
@@ -27,56 +23,50 @@ public class DealWithWorker extends Thread {
 	private PrintWriter out;
 	private Server server;
 	private Socket socket;
-	private DealWithClient client;
-	private BufferedImage image;
+
 	private String fileName;
-	private LinkedList<Point> coordinates = new LinkedList<Point>();
 	private byte[] imageBytes;
+	private BufferedImage image;
+	private DealWithClient client;	
+	private LinkedList<Point> coordinates = new LinkedList<Point>();
+
 
 	public DealWithWorker(Socket socket, Server server) {
-
 		this.server = server;
 		this.socket = socket;
-
 		try {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-
 		} catch (IOException e) {
+			System.out.println("ERROR: failed getting socket output and input!");
 			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void run() {
-
 		while(true) {
 			try {
-
 				String str;
 				str = in.readLine();
+				//TODO
 				System.out.println(str);
-
 				if(str.contains("TASK REQUEST")) {
 					findTask();
 				}
 				if(str.contains("RESULTS")) {
 					String[] results = str.split(":");
-					System.out.println(results[1]);
 					getPoints(results[1]);
 				}
-
-
 			} catch (IOException e) {
+				server.getWorkers().remove(this);
 				e.printStackTrace();
 			}
 		}
 	}
 
 	public void sendTask(BufferedImage image, BufferedImage logo, DealWithClient c) {
-
 		this.client = c;
-
 		out.println("SERVER: Sending logo!");
 		out.flush();
 		sendImage(logo);
@@ -84,20 +74,23 @@ public class DealWithWorker extends Thread {
 		try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e) {
+			System.out.println("ERROR: thread didn't go to sleep!");
 			e.printStackTrace();
 		}
+		//TODO
+		out.flush();
 		out.println("SERVER: Sending image!");
 		out.flush();
 		try {
 			Thread.sleep(2000);
 		} catch (InterruptedException e) {
+			System.out.println("ERROR: thread didn't go to sleep!");
 			e.printStackTrace();
 		}
 		sendImage(image);
 	}
 
-	private synchronized void sendImage(BufferedImage image) {
-
+	private void sendImage(BufferedImage image) {
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ImageIO.write(image, "png", baos);
@@ -109,14 +102,15 @@ public class DealWithWorker extends Thread {
 			outStream.write(imageBytes);
 			outStream.flush();
 		} catch (IOException e) {
+			System.out.println("ERROR: Failed sending image!");
 			e.printStackTrace();
 		}
 	}
 
 	private void getPoints(String coords) {
+		LinkedList<Integer> points = new LinkedList<Integer>();
 		String[] pairs = coords.split(";");
 		String[] point;
-		LinkedList<Integer> points = new LinkedList<Integer>(); 
 		for(int i=0; i!= pairs.length; i++) {
 			String newS = pairs[i].replace("(", "");
 			newS = newS.replace(")", "");
@@ -129,10 +123,8 @@ public class DealWithWorker extends Thread {
 			coordinates.add(p);
 		}
 		for(int k=0; k!= coordinates.size(); k+=2) {
-			//System.out.println(coordinates.get(k).toString());
 			drawRectangle(coordinates.get(k),coordinates.get(k+1));
 		}
-
 		coordinates.removeAll(coordinates);
 		File newImage = new File(fileName);
 		try {
@@ -152,18 +144,11 @@ public class DealWithWorker extends Thread {
 	}
 
 	private void findTask() {
-
 		Boolean task=false;
-
 		for(int i=0; i!=server.getClients().size(); i++) {
 			if(!server.getClients().get(i).getTasks().isEmpty()) {
 				String taskString[] = server.getClients().get(i).getTasks().getFirst().split(",");
 				server.getClients().get(i).getTasks().removeFirst();
-				/*
-				for(int j=0; j!=taskString.length; j++) {
-					System.out.println(taskString[j]);
-				}
-				 */
 				String name = taskString[0];
 				this.fileName = taskString[0];
 				File[] images = server.getClients().get(i).getFiles();
@@ -174,7 +159,7 @@ public class DealWithWorker extends Thread {
 						try {
 							this.image = ImageIO.read(images[k]);
 						} catch (IOException e) {
-							System.out.println("Failed getting image!");
+							System.out.println("ERROR: Failed getting image!");
 							e.printStackTrace();
 						}
 					}
@@ -184,7 +169,6 @@ public class DealWithWorker extends Thread {
 				sendTask(image, client.getLogo(), client);
 				break;
 			}
-			//System.out.println("No tasks.");
 		}
 	}
 
