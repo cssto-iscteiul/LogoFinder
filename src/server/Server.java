@@ -29,11 +29,11 @@ public class Server {
 		}
 	}
 
-	public synchronized LinkedList<DealWithWorker> getWorkers(){
+	public synchronized LinkedList<DealWithWorker> getWorkers() {
 		return workers;
 	}
 
-	public synchronized LinkedList<DealWithClient> getClients(){
+	public synchronized LinkedList<DealWithClient> getClients() {
 		return clients;
 	}
 
@@ -46,11 +46,11 @@ public class Server {
 				out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
 				String str;
 				str = in.readLine();
-				//TODO
+				// TODO
 				System.out.println(str);
 
-				if(str.contains("TYPE: WORKER")) {
-					String[] string= str.split(":");
+				if (str.contains("TYPE: WORKER")) {
+					String[] string = str.split(":");
 					String SEARCHTYPE = string[2];
 					addSearchType(SEARCHTYPE);
 					out.println("SERVER: you're connected!");
@@ -59,10 +59,10 @@ public class Server {
 					dww.start();
 					workers.add(dww);
 				}
-				if(str.contains("TYPE: CLIENT")) {
-					if(!searchTypes.isEmpty()) {
+				if (str.contains("TYPE: CLIENT")) {
+					if (!searchTypes.isEmpty()) {
 						out.println(searchTypesToString());
-						out.flush();						
+						out.flush();
 					} else {
 						out.println("SERVER: you're connected!");
 						out.flush();
@@ -78,21 +78,21 @@ public class Server {
 	}
 
 	private synchronized String searchTypesToString() {
-		String str="";
+		String str = "";
 
-		for(int i=0; i!=searchTypes.size(); i++) {
-			str= str + searchTypes.get(i);
-			if(i!=searchTypes.size()-1) {
+		for (int i = 0; i != searchTypes.size(); i++) {
+			str = str + searchTypes.get(i);
+			if (i != searchTypes.size() - 1) {
 				str = str + ",";
-			} 			
+			}
 		}
 		return str;
 	}
 
 	private synchronized void addSearchType(String search) {
-		if(!searchTypes.contains(search)) {
+		if (!searchTypes.contains(search)) {
 			searchTypes.add(search);
-			for(int i=0; i!= clients.size(); i++) {
+			for (int i = 0; i != clients.size(); i++) {
 				clients.get(i).updateSearch(searchTypesToString());
 			}
 		}

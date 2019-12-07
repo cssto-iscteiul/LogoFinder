@@ -51,23 +51,23 @@ public class DealWithClient extends Thread {
 
 	@Override
 	public void run() {
-		while(true) {
+		while (true) {
 			try {
 				String str;
 				str = in.readLine();
 				System.out.println(str);
-				if(str.contains("C:")) {
-					String[] string= str.split(",");
+				if (str.contains("C:")) {
+					String[] string = str.split(",");
 					this.SEARCH = string[0];
 					String PATH = string[1];
 					imagesToSearch = new File(PATH).listFiles();
 				}
-				if(str.contains("CLIENT REQUEST")) {
+				if (str.contains("CLIENT REQUEST")) {
 					this.logo = ImageIO.read(socket.getInputStream());
 					addTasks(SEARCH);
 					timer.schedule(checkForResults, new Date(System.currentTimeMillis()), 20000);
 				}
-				if(str.contains("Disconnecting")) {
+				if (str.contains("Disconnecting")) {
 					server.getClients().remove(this);
 				}
 			} catch (IOException e) {
@@ -87,11 +87,11 @@ public class DealWithClient extends Thread {
 	}
 
 	public void sendResults() {
-		if(taskCounter==0 && !results.isEmpty()) {
-			for(int i=0; i!=results.size(); i++) {
+		if (taskCounter == 0 && !results.isEmpty()) {
+			for (int i = 0; i != results.size(); i++) {
 				// TODO
 				out.flush();
-				out.println("File name:"+results.get(i).getName());
+				out.println("File name:" + results.get(i).getName());
 				out.flush();
 				try {
 					imageToSend = ImageIO.read(results.get(i));
@@ -121,7 +121,7 @@ public class DealWithClient extends Thread {
 			imageBytes = baos.toByteArray();
 			baos.close();
 			OutputStream outStream = socket.getOutputStream();
-			//TODO outStream.flush();
+			// TODO outStream.flush();
 			outStream.write(imageBytes);
 			outStream.flush();
 		} catch (IOException e) {
@@ -131,8 +131,8 @@ public class DealWithClient extends Thread {
 	}
 
 	private void addTasks(String search) {
-		for(int i=0; i!= imagesToSearch.length; i++) {
-			String task = imagesToSearch[i].getName()+","+search;
+		for (int i = 0; i != imagesToSearch.length; i++) {
+			String task = imagesToSearch[i].getName() + "," + search;
 			tasks.add(task);
 			this.taskCounter++;
 		}
@@ -149,6 +149,5 @@ public class DealWithClient extends Thread {
 	public synchronized BufferedImage getLogo() {
 		return logo;
 	}
-
 
 }

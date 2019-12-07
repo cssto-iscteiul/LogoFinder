@@ -1,4 +1,5 @@
 package client;
+
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
@@ -16,7 +17,7 @@ public class Client {
 	private PrintWriter out;
 	private byte[] logoBytes;
 	private LinkedList<File> files = new LinkedList<File>();
-	
+
 	public static void main(String[] args) throws IOException {
 		Client client = new Client(Integer.parseInt(args[0]));
 	}
@@ -24,7 +25,7 @@ public class Client {
 	public Client(int PORT) throws IOException {
 		connectToServer();
 		window = new Frame(this);
-		window.open();			
+		window.open();
 
 		new Thread(new Runnable() {
 			@Override
@@ -39,12 +40,12 @@ public class Client {
 						String str = bf.readLine();
 						System.out.println(str);
 
-						if(str.contains("Search")) {
+						if (str.contains("Search")) {
 							String[] string = str.split(",");
 							updateList(string);
 							window.updateSearchList(searchTypes);
 						}
-						if(str.contains("File name")) {
+						if (str.contains("File name")) {
 							String[] string = str.split(":");
 							String fileName = string[1];
 							InputStream input1 = socket.getInputStream();
@@ -53,7 +54,7 @@ public class Client {
 							ImageIO.write(img, "png", image);
 							files.add(image);
 						}
-						if(str.contains("DONE.")) {
+						if (str.contains("DONE.")) {
 							window.updateList(files);
 						}
 					} catch (IOException e) {
@@ -79,13 +80,13 @@ public class Client {
 	}
 
 	public void updateList(String[] data) {
-		for(int i = 0; i < data.length; i++) {
+		for (int i = 0; i < data.length; i++) {
 			searchTypes.add(data[i]);
 		}
 	}
 
 	public void requestSearch(BufferedImage logo, String path, String searchType) {
-		out.println(searchType+","+path);
+		out.println(searchType + "," + path);
 		out.flush();
 		out.println("CLIENT REQUEST");
 		out.flush();
