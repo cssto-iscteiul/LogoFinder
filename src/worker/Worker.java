@@ -16,6 +16,16 @@ import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
+/**
+ * 
+ * To run this class you must add the port and search type in "Run Configurations > Arguments"!
+ * For search types please use one of the following:
+ * "180 º Search" ; "90 º Search" or "Simple Search".
+ * Thank you! :)
+ *
+ * @author Catarina Teodoro
+ */
+
 public class Worker {
 
 	private InetAddress HOST;
@@ -53,7 +63,6 @@ public class Worker {
 						in = new InputStreamReader(s.getInputStream());
 						bf = new BufferedReader(in);
 						String str = bf.readLine();
-						// TODO
 						System.out.println(str);
 
 						if (str.contains("SERVER: Sending image!")) {
@@ -174,9 +183,11 @@ public class Worker {
 					i = 0;
 					if (x + logoHeight < width && y + logoWidth < height) {
 						int yValue = y;
-						for (int j = logoHeight - 1; j > 0; j--) {
-							for (int k = 0; k < logoWidth - 1; k++) {
-								if (image.getRGB(x + k, yValue) == logo.getRGB(k, j)) {
+						int xValue = x;
+						for (int k = 0; k < logoWidth; k++) {
+							xValue = x;
+							for (int j = logoHeight - 1; j > -1; j--) {
+								if (image.getRGB(xValue, yValue) == logo.getRGB(k, j)) {
 									match[i] = true;
 								} else {
 									match[i] = false;
@@ -186,6 +197,7 @@ public class Worker {
 									break;
 								}
 								i++;
+								xValue++;
 							}
 							yValue++;
 						}
@@ -201,7 +213,6 @@ public class Worker {
 		if (logosFound != 0) {
 			sendCoordinates();
 		} else {
-			System.out.println("Found peanuts.");
 			setTimedTask();
 		}
 	}
@@ -224,9 +235,12 @@ public class Worker {
 					match = new boolean[logoWidth * logoHeight];
 					i = 0;
 					if (x + logoWidth < width && y + logoHeight < height) {
-						for (int j = logoHeight - 1; j > 0; j--) {
-							for (int k = logoWidth - 1; k > 0; k--) {
-								if (image.getRGB(x - (-k), y - (-j)) == logo.getRGB(k, j)) {
+						int yValue = y;
+						int xValue = x;
+						for (int j = logoHeight - 1; j > -1; j--) {
+							xValue = x;
+							for (int k = logoWidth - 1; k > -1; k--) {
+								if (image.getRGB(xValue, yValue) == logo.getRGB(k, j)) {
 									match[i] = true;
 								} else {
 									match[i] = false;
@@ -236,7 +250,9 @@ public class Worker {
 									break;
 								}
 								i++;
+								xValue++;
 							}
+							yValue++;
 						}
 						if (areAllTrue(match)) {
 							coordinates.add(p);
@@ -250,7 +266,6 @@ public class Worker {
 		if (logosFound != 0) {
 			sendCoordinates();
 		} else {
-			System.out.println("Found peanuts.");
 			setTimedTask();
 		}
 	}
@@ -272,7 +287,7 @@ public class Worker {
 
 	private void setTimedTask() {
 		try {
-			TimeUnit.SECONDS.sleep(60);
+			TimeUnit.SECONDS.sleep(20);
 		} catch (InterruptedException e) {
 			System.out.println("ERROR: Pause failed!");
 			e.printStackTrace();

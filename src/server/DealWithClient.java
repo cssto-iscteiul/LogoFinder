@@ -18,6 +18,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
+/**
+ * 
+ * @author Catarina Teodoro
+ */
+
 public class DealWithClient extends Thread {
 
 	private BufferedReader in;
@@ -47,6 +52,7 @@ public class DealWithClient extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		timer.schedule(checkForResults, new Date(System.currentTimeMillis()), 20000);
 	}
 
 	@Override
@@ -65,7 +71,6 @@ public class DealWithClient extends Thread {
 				if (str.contains("CLIENT REQUEST")) {
 					this.logo = ImageIO.read(socket.getInputStream());
 					addTasks(SEARCH);
-					timer.schedule(checkForResults, new Date(System.currentTimeMillis()), 20000);
 				}
 				if (str.contains("Disconnecting")) {
 					server.getClients().remove(this);
@@ -77,7 +82,6 @@ public class DealWithClient extends Thread {
 	}
 
 	public synchronized void saveResult(File image) {
-		this.taskCounter--;
 		results.add(image);
 	}
 
@@ -89,7 +93,6 @@ public class DealWithClient extends Thread {
 	public void sendResults() {
 		if (taskCounter == 0 && !results.isEmpty()) {
 			for (int i = 0; i != results.size(); i++) {
-				// TODO
 				out.flush();
 				out.println("File name:" + results.get(i).getName());
 				out.flush();
@@ -120,7 +123,8 @@ public class DealWithClient extends Thread {
 			baos.flush();
 			imageBytes = baos.toByteArray();
 			baos.close();
-			OutputStream outStream = socket.getOutputStream();;
+			OutputStream outStream = socket.getOutputStream();
+			;
 			outStream.write(imageBytes);
 			outStream.flush();
 		} catch (IOException e) {
@@ -135,6 +139,10 @@ public class DealWithClient extends Thread {
 			tasks.add(task);
 			this.taskCounter++;
 		}
+	}
+
+	public void removeTask() {
+		this.taskCounter--;
 	}
 
 	public synchronized LinkedList<String> getTasks() {

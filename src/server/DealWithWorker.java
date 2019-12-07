@@ -15,6 +15,11 @@ import java.net.Socket;
 import java.util.LinkedList;
 import javax.imageio.ImageIO;
 
+/**
+ * 
+ * @author Catarina Teodoro
+ */
+
 public class DealWithWorker extends Thread {
 
 	private BufferedReader in;
@@ -24,11 +29,13 @@ public class DealWithWorker extends Thread {
 
 	private String fileName;
 	private byte[] imageBytes;
+	private String SEARCHTYPE;
 	private BufferedImage image;
 	private DealWithClient client;
 	private LinkedList<Point> coordinates = new LinkedList<Point>();
 
-	public DealWithWorker(Socket socket, Server server) {
+	public DealWithWorker(Socket socket, Server server, String SEARCHTYPE) {
+		this.SEARCHTYPE = SEARCHTYPE;
 		this.server = server;
 		this.socket = socket;
 		try {
@@ -46,7 +53,6 @@ public class DealWithWorker extends Thread {
 			try {
 				String str;
 				str = in.readLine();
-				// TODO
 				System.out.println(str);
 				if (str.contains("TASK REQUEST")) {
 					findTask();
@@ -74,7 +80,6 @@ public class DealWithWorker extends Thread {
 			System.out.println("ERROR: thread didn't go to sleep!");
 			e.printStackTrace();
 		}
-		// TODO
 		out.flush();
 		out.println("SERVER: Sending image!");
 		out.flush();
@@ -145,25 +150,29 @@ public class DealWithWorker extends Thread {
 		for (int i = 0; i != server.getClients().size(); i++) {
 			if (!server.getClients().get(i).getTasks().isEmpty()) {
 				String taskString[] = server.getClients().get(i).getTasks().getFirst().split(",");
-				server.getClients().get(i).getTasks().removeFirst();
+				String searchType = taskString[1];
 				String name = taskString[0];
-				this.fileName = taskString[0];
-				File[] images = server.getClients().get(i).getFiles();
-				this.client = server.getClients().get(i);
-				task = true;
-				for (int k = 0; k != images.length; k++) {
-					if (images[k].getName().contains(name)) {
-						try {
-							this.image = ImageIO.read(images[k]);
-						} catch (IOException e) {
-							System.out.println("ERROR: Failed getting image!");
-							e.printStackTrace();
+				if (searchType.contains(SEARCHTYPE)) {
+					this.fileName = taskString[0];
+					File[] images = server.getClients().get(i).getFiles();
+					this.client = server.getClients().get(i);
+					task = true;
+					for (int k = 0; k != images.length; k++) {
+						if (images[k].getName().contains(name)) {
+							try {
+								this.image = ImageIO.read(images[k]);
+							} catch (IOException e) {
+								System.out.println("ERROR: Failed getting image!");
+								e.printStackTrace();
+							}
 						}
 					}
 				}
 			}
 			if (task) {
+				server.getClients().get(i).getTasks().removeFirst();
 				sendTask(image, client.getLogo(), client);
+				client.removeTask();
 				break;
 			}
 		}

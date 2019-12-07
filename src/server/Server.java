@@ -4,6 +4,14 @@ import java.io.*;
 import java.net.*;
 import java.util.LinkedList;
 
+/**
+ * 
+ * To run this class you must add the port in "Run Configurations > Arguments"
+ * :)
+ *
+ * @author Catarina Teodoro
+ */
+
 public class Server {
 
 	private ServerSocket serverSocket;
@@ -47,7 +55,6 @@ public class Server {
 				out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
 				String str;
 				str = in.readLine();
-				// TODO
 				System.out.println(str);
 
 				if (str.contains("TYPE: WORKER")) {
@@ -56,7 +63,7 @@ public class Server {
 					addSearchType(SEARCHTYPE);
 					out.println("SERVER: you're connected!");
 					out.flush();
-					DealWithWorker dww = new DealWithWorker(socket, this);
+					DealWithWorker dww = new DealWithWorker(socket, this, SEARCHTYPE);
 					dww.start();
 					workers.add(dww);
 				}
@@ -65,7 +72,7 @@ public class Server {
 						out.println(searchTypesToString());
 						out.flush();
 					} else {
-						out.println("SERVER: you're connected!");
+						out.println("SERVER: you're connected, no searches at the moment!");
 						out.flush();
 					}
 					DealWithClient dwc = new DealWithClient(socket, this);

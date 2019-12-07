@@ -2,6 +2,11 @@ package server;
 
 import java.util.TimerTask;
 
+/**
+ *
+ * @author Catarina Teodoro
+ */
+
 public class CheckForResults extends TimerTask {
 
 	private DealWithClient client;

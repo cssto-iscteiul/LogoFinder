@@ -35,6 +35,13 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+/**
+ * 
+ * This is the client's user interface :)
+ *
+ * @author Catarina Teodoro
+ */
+
 public class Frame {
 
 	private JFrame frame;
@@ -51,14 +58,15 @@ public class Frame {
 	private BufferedImage logoToSearch;
 	private BufferedImage imageToCompare;
 	private String[] data = new String[3];
-	DefaultListModel<File> listModel = new DefaultListModel<>();
-	// private File[] images = new File[50];
+	private DefaultListModel<File> listModel = new DefaultListModel<>();
 	private Client client;
 	private String finalPath;
+	private int listIndice;
 
 	public Frame(Client client) {
 
 		this.client = client;
+		this.listIndice = 0;
 		frame = new JFrame("Logo Finder");
 		bottomP = new JPanel();
 		bottom = new JPanel();
@@ -120,9 +128,6 @@ public class Frame {
 					folder.setText(fileChooser.getSelectedFile().toString());
 					String path = fileChooser.getSelectedFile().toString();
 					setPath(path);
-					/*
-					 * if(!rightList.isSelectionEmpty()) { setImageToSearch(); }
-					 */
 				}
 			}
 		});
@@ -184,11 +189,21 @@ public class Frame {
 		}
 
 		for (int i = 0; i != files.size(); i++) {
-			listModel.add(i, files.get(i));
+			listModel.add(listIndice, files.get(i));
+			listIndice++;
 		}
 
 		rightList.setCellRenderer(new FileRenderer());
 		rightList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+		try {
+			imageToCompare = ImageIO.read(listModel.get(0));
+			imageToSearch.setText(null);
+			imageToSearch.setIcon(new ImageIcon(imageToCompare));
+		} catch (IOException e) {
+			System.out.println("ERROR: couldn't display image!");
+			e.printStackTrace();
+		}
 
 		frame.revalidate();
 		frame.repaint();
@@ -232,7 +247,9 @@ public class Frame {
 
 	public void updateSearchList(LinkedList<String> searchTypes) {
 		for (int i = 0; i < searchTypes.size(); i++) {
-			data[i] = searchTypes.get(i);
+			if (!searchTypes.contains(data[i])) {
+				data[i] = searchTypes.get(i);
+			}
 		}
 		frame.revalidate();
 		frame.repaint();

@@ -2,6 +2,11 @@ package worker;
 
 import java.util.TimerTask;
 
+/**
+ *
+ * @author Catarina Teodoro
+ */
+
 public class RequestTask extends TimerTask {
 
 	private Worker worker;

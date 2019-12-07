@@ -4,8 +4,14 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.util.LinkedList;
-
 import javax.imageio.ImageIO;
+
+/**
+ * 
+ * To run this class you must add the port in "Run Configurations > Arguments" :)
+ *
+ * @author Catarina Teodoro
+ */
 
 public class Client {
 
@@ -43,6 +49,9 @@ public class Client {
 
 						if (str.contains("Search")) {
 							String[] string = str.split(",");
+							if (!searchTypes.isEmpty()) {
+								searchTypes.removeAll(searchTypes);
+							}
 							updateList(string);
 							window.updateSearchList(searchTypes);
 						}
