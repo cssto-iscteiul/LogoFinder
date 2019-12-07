@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
-
 public class Worker {
 
 	private InetAddress HOST;
@@ -31,7 +30,7 @@ public class Worker {
 	private LinkedList<Point> coordinates = new LinkedList<Point>();
 
 	public static void main(String[] args) throws IOException {
-		Worker worker = new Worker(Integer.parseInt(args[0]),args[1]);
+		Worker worker = new Worker(Integer.parseInt(args[0]), args[1]);
 	}
 
 	public Worker(int HOST, String SEARCHTYPE) throws IOException {
@@ -53,28 +52,28 @@ public class Worker {
 						in = new InputStreamReader(s.getInputStream());
 						bf = new BufferedReader(in);
 						String str = bf.readLine();
-						//TODO
+						// TODO
 						System.out.println(str);
 
-						if(str.contains("SERVER: Sending image!")) {
+						if (str.contains("SERVER: Sending image!")) {
 							InputStream input1 = s.getInputStream();
 							image = ImageIO.read(input1);
-							if(SEARCHTYPE.contains("Simple")) {
+							if (SEARCHTYPE.contains("Simple")) {
 								simpleSearch();
 							}
-							if(SEARCHTYPE.contains("90")) {
+							if (SEARCHTYPE.contains("90")) {
 								ninetyDegreeSearch();
 							}
-							if(SEARCHTYPE.contains("180")) {
+							if (SEARCHTYPE.contains("180")) {
 								simpleSearch();
 							}
 						}
-						if(str.contains("SERVER: Sending logo!")) {
+						if (str.contains("SERVER: Sending logo!")) {
 							timer.cancel();
 							InputStream input2 = s.getInputStream();
 							logo = ImageIO.read(input2);
 						}
-						if(str.contains("connected")) {
+						if (str.contains("connected")) {
 							timer.schedule(request, new Date(System.currentTimeMillis()), 20000);
 						}
 					} catch (IOException e) {
@@ -90,7 +89,7 @@ public class Worker {
 			HOST = InetAddress.getLocalHost();
 			s = new Socket(HOST, PORT);
 			out = new PrintWriter(s.getOutputStream());
-			out.println("TYPE: WORKER, SEARCH:"+SEARCHTYPE);
+			out.println("TYPE: WORKER, SEARCH:" + SEARCHTYPE);
 			out.flush();
 		} catch (IOException e) {
 			System.out.println("ERROR: failed connecting to server!");
@@ -99,8 +98,8 @@ public class Worker {
 	}
 
 	public static boolean areAllTrue(boolean[] array) {
-		for(boolean b : array) {
-			if(!b) {
+		for (boolean b : array) {
+			if (!b) {
 				return false;
 			}
 		}
@@ -114,41 +113,41 @@ public class Worker {
 		int logoWidth = logo.getWidth();
 		int logoHeight = logo.getHeight();
 		coordinates.removeAll(coordinates);
-		boolean[] match = new boolean[logoWidth*logoHeight];
+		boolean[] match = new boolean[logoWidth * logoHeight];
 		int i = 0;
 		int logosFound = 0;
 
-		for(int y=0; y<height; y++) {
-			for(int x=0; x<width; x++) {
-				if (image.getRGB(x, y) == logo.getRGB(0, 0)) {
-					p = new Point(x,y);
-					match = new boolean[logoWidth*logoHeight];
-					i=0;
-					if(x+logoWidth<width && y+logoHeight<height) {
-						for(int j=0; j<logoHeight; j++) {
-							for(int k=0; k<logoWidth; k++) {
-								if (image.getRGB(x+k, y+j) == logo.getRGB(k, j)) {
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				if (image.getRGB(x, y) == logo.getRGB(0, logoHeight - 1)) {
+					p = new Point(x, y);
+					match = new boolean[logoWidth * logoHeight];
+					i = 0;
+					if (x + logoWidth < width && y + logoHeight < height) {
+						for (int j = 0; j < logoHeight; j++) {
+							for (int k = 0; k < logoWidth; k++) {
+								if (image.getRGB(x + k, y + j) == logo.getRGB(k, j)) {
 									match[i] = true;
 								} else {
 									match[i] = false;
 									break;
 								}
-								if(!match[i]) {
+								if (!match[i]) {
 									break;
 								}
 								i++;
 							}
 						}
-						if(areAllTrue(match)) {
+						if (areAllTrue(match)) {
 							coordinates.add(p);
-							coordinates.add(new Point(logoWidth,logoHeight));
+							coordinates.add(new Point(logoWidth, logoHeight));
 							logosFound++;
 						}
 					}
 				}
 			}
 		}
-		if(logosFound!=0) {
+		if (logosFound != 0) {
 			sendCoordinates();
 		}
 	}
@@ -160,55 +159,56 @@ public class Worker {
 		int logoWidth = logo.getWidth();
 		int logoHeight = logo.getHeight();
 		coordinates.removeAll(coordinates);
-		boolean[] match = new boolean[logoWidth*logoHeight];
+		boolean[] match = new boolean[logoWidth * logoHeight];
 		int i = 0;
 		int logosFound = 0;
 
-		for(int y=0; y<height; y++) {
-			for(int x=0; x<width; x++) {
-				if (image.getRGB(x, y) == logo.getRGB(logoWidth-1, 0)) {
-					p = new Point(x,y);
-					match = new boolean[logoWidth*logoHeight];
-					i=0;
-					if(x+logoWidth<width && y+logoHeight<height) {
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				if (image.getRGB(x, y) == logo.getRGB(0, logoHeight - 1)) {
+					p = new Point(x, y);
+					if (x + logoHeight < width && y + logoWidth < height) {
 						int yValue = y;
-						for(int j=logoHeight-1; j>0; j--) {
-							for(int k=0; k<logoWidth-1; k++) {
-								if (image.getRGB(x+k, yValue) == logo.getRGB(k, j)) {
+						for (int j = logoHeight - 1; j > 0; j--) {
+							for (int k = 0; k < logoWidth - 1; k++) {
+								if (image.getRGB(x + k, yValue) == logo.getRGB(k, j)) {
 									match[i] = true;
 								} else {
 									match[i] = false;
 									break;
 								}
-								if(!match[i]) {
+								if (!match[i]) {
 									break;
 								}
 								i++;
 							}
 							yValue++;
 						}
-						if(areAllTrue(match)) {
+						if (areAllTrue(match)) {
 							coordinates.add(p);
-							coordinates.add(new Point(logoWidth,logoHeight));
+							coordinates.add(new Point(logoWidth, logoHeight));
 							logosFound++;
 						}
 					}
 				}
 			}
 		}
-		if(logosFound!=0) {
+		if (logosFound != 0) {
 			sendCoordinates();
+		} else {
+			System.out.println("Found peanuts.");
+			setTimedTask();
 		}
 	}
 
 	public void sendCoordinates() {
 		String coordinatesMessage = "RESULTS:";
 
-		for(int i=0; i!=coordinates.size(); i++) {
-			if(i == coordinates.size()-1) {
-				coordinatesMessage += "("+coordinates.get(i).x+","+coordinates.get(i).y+")";
+		for (int i = 0; i != coordinates.size(); i++) {
+			if (i == coordinates.size() - 1) {
+				coordinatesMessage += "(" + coordinates.get(i).x + "," + coordinates.get(i).y + ")";
 			} else {
-				coordinatesMessage += "("+coordinates.get(i).x+","+coordinates.get(i).y+");";
+				coordinatesMessage += "(" + coordinates.get(i).x + "," + coordinates.get(i).y + ");";
 			}
 		}
 		out.println(coordinatesMessage);
