@@ -167,6 +167,7 @@ public class Worker {
 			for (int x = 0; x < width; x++) {
 				if (image.getRGB(x, y) == logo.getRGB(0, logoHeight - 1)) {
 					p = new Point(x, y);
+					i = 0;
 					if (x + logoHeight < width && y + logoWidth < height) {
 						int yValue = y;
 						for (int j = logoHeight - 1; j > 0; j--) {
